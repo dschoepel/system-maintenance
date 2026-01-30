@@ -1,0 +1,6 @@
+[Unit]
+Description=System Maintenance Cleanup
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/system-maintenance/scripts/system-maintenance.sh

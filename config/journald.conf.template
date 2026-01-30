@@ -1,0 +1,4 @@
+[Journal]
+SystemMaxUse=200M
+SystemKeepFree=50M
+RuntimeMaxUse=50M

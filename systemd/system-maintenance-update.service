@@ -1,0 +1,7 @@
+[Unit]
+Description=Update system-maintenance Git repo
+
+[Service]
+Type=oneshot
+WorkingDirectory=/usr/local/system-maintenance
+ExecStart=/usr/bin/git pull --rebase
