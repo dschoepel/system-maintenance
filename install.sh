@@ -14,7 +14,7 @@ if [ ! -d "$BASE_DIR" ]; then
 fi
 
 # Install maintenance script
-install -m 0755 "$BASE_DIR/scripts/system-maintenance.sh" /usr/local/system-maintenance/scripts/system-maintenance.sh
+install -m 0755 scripts/system-maintenance.sh "$BASE_DIR/scripts/system-maintenance.sh"
 
 # Install systemd units
 install -m 0644 "$BASE_DIR/systemd/system-maintenance.service" /etc/systemd/system/system-maintenance.service
