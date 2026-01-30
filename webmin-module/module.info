@@ -2,3 +2,6 @@ desc=System Maintenance
 category=system
 usermin=0
 version=1.0
+depends=
+longdesc=Unified system maintenance dashboard and controls (systemd + journald)
+icons=system-maintenance

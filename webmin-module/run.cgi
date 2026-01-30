@@ -1,16 +1,28 @@
 #!/usr/bin/perl
-use strict;
-use warnings;
-use WebminCore;
+# run.cgi — Trigger system maintenance manually
 
-init_config();
-header("Running Cleanup");
+require './system-maintenance-lib.pl';
+&ui_print_header(undef, "Run System Maintenance", "");
 
-print "<pre>\n";
+print &ui_subheading("Executing Maintenance");
 
-system("/usr/local/system-maintenance/scripts/system-maintenance.sh");
+# Run the systemd service
+my $output = run_cmd("systemctl start system-maintenance.service");
 
-print "</pre>\n";
-print "<p>Cleanup complete.</p>\n";
+# Give systemd a moment to start the job
+sleep(1);
 
-footer();
+# Fetch recent logs from the service
+my $logs = run_cmd("journalctl -u system-maintenance.service --no-pager -n 50");
+
+print &ui_table_start("Execution Output", "width=100%");
+print &ui_table_row("Systemd Response", "<pre>$output</pre>");
+print &ui_table_row("Recent Logs", "<pre>$logs</pre>");
+print &ui_table_end();
+
+print "<br>";
+
+print &ui_link("index.cgi", "Return to Dashboard");
+
+&ui_print_footer();
+

@@ -1,40 +1,48 @@
 #!/usr/bin/perl
-use strict;
-use warnings;
-use WebminCore;
+# index.cgi — System Maintenance Dashboard
 
-init_config();
-header("System Maintenance");
+require './system-maintenance-lib.pl';
+&ui_print_header(undef, "System Maintenance Dashboard", "");
 
-print "<h2>System Maintenance</h2>";
+print &ui_subheading("Maintenance Status");
 
-print <<'EOF';
-<form method='post' action='run.cgi'>
-  <input type='submit' value='Run Cleanup Now'>
-</form>
+# Last run timestamp (from systemd)
+my $last_run = `systemctl show system-maintenance.service -p ActiveEnterTimestamp --value 2>/dev/null`;
+chomp($last_run);
+$last_run = $last_run eq "" ? "No recorded runs yet" : $last_run;
 
-<form method='post' action='install-timer.cgi'>
-  <input type='submit' value='Install/Enable Weekly Timer'>
-</form>
+# Next scheduled run (from systemd timer)
+my $next_run = `systemctl show system-maintenance.timer -p NextElapseUSecRealtime --value 2>/dev/null`;
+chomp($next_run);
+$next_run = $next_run eq "" ? "Unknown" : $next_run;
 
-<form method='post' action='edit-journal.cgi'>
-  <input type='submit' value='Edit Journal Limits'>
-</form>
-EOF
+print &ui_table_start("Maintenance Information", "width=100%");
+print &ui_table_row("Last Run", $last_run);
+print &ui_table_row("Next Scheduled Run", $next_run);
+print &ui_table_end();
 
-my $apt     = `du -sh /var/cache/apt/archives 2>/dev/null | cut -f1`;
-my $journal = `du -sh /var/log/journal 2>/dev/null | cut -f1`;
-my $snap    = `snap list --all 2>/dev/null | grep disabled | wc -l`;
+print "<br>";
 
-chomp($apt);
-chomp($journal);
-chomp($snap);
+print &ui_subheading("Journald Configuration");
 
-print "<h3>Current Status</h3>";
-print "<table border=1 cellpadding=5>";
-print "<tr><td>APT Cache</td><td>$apt</td></tr>";
-print "<tr><td>Journal Size</td><td>$journal</td></tr>";
-print "<tr><td>Old Snap Revisions</td><td>$snap</td></tr>";
-print "</table>";
+my %journal = &read_journald_config();
 
-footer();
+print &ui_table_start("Journald Caps", "width=100%");
+print &ui_table_row("SystemMaxUse", $journal{'SystemMaxUse'});
+print &ui_table_row("SystemKeepFree", $journal{'SystemKeepFree'});
+print &ui_table_row("MaxFileSec", $journal{'MaxFileSec'});
+print &ui_table_end();
+
+print "<br>";
+
+print &ui_subheading("Actions");
+
+print &ui_form_start("run.cgi", "post");
+print &ui_submit("Run Maintenance Now");
+print &ui_form_end();
+
+print "<br>";
+
+print &ui_link("status.cgi", "View Detailed Status and Logs");
+
+&ui_print_footer();
