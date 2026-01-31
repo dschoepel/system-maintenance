@@ -1,22 +1,20 @@
 #!/usr/bin/perl
-# index.cgi — System Maintenance Dashboard
-use strict; 
-use warnings; 
-
-use WebminCore; 
-init_config();
 
 require './system-maintenance-lib.pl';
+use WebminCore;
+init_config();
+
+use strict;
+use warnings;
+
 &ui_print_header(undef, "System Maintenance Dashboard", "");
 
 print &ui_subheading("Maintenance Status");
 
-# Last run timestamp (from systemd)
 my $last_run = `systemctl show system-maintenance.service -p ActiveEnterTimestamp --value 2>/dev/null`;
 chomp($last_run);
 $last_run = $last_run eq "" ? "No recorded runs yet" : $last_run;
 
-# Next scheduled run (from systemd timer)
 my $next_run = `systemctl show system-maintenance.timer -p NextElapseUSecRealtime --value 2>/dev/null`;
 chomp($next_run);
 $next_run = $next_run eq "" ? "Unknown" : $next_run;
