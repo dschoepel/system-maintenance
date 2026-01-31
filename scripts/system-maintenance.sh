@@ -1,9 +1,3 @@
-
----
-
-### scripts/system-maintenance.sh
-
-```bash
 #!/bin/bash
 set -e
 
