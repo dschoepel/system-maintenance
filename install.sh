@@ -3,15 +3,12 @@ set -e
 
 BASE_DIR="/usr/local/system-maintenance"
 WEBMIN_DIR="/usr/share/webmin/system-maintenance"
+WEBMIN_ETC="/etc/webmin/system-maintenance"
 
 echo "Installing System Maintenance from $BASE_DIR"
 
-# Ensure script is run from repo root if cloned elsewhere
-if [ ! -d "$BASE_DIR" ]; then
-  echo "Expected repo at $BASE_DIR; creating and copying."
-  mkdir -p "$BASE_DIR"
-  cp -a . "$BASE_DIR"
-fi
+# Ensure base directory exists
+mkdir -p "$BASE_DIR"
 
 # Install maintenance script
 install -m 0755 scripts/system-maintenance.sh "$BASE_DIR/scripts/system-maintenance.sh"
@@ -24,24 +21,34 @@ install -m 0644 "$BASE_DIR/systemd/system-maintenance-update.timer" /etc/systemd
 
 systemctl daemon-reload
 systemctl enable --now system-maintenance.timer
-# auto-update timer is optional; enable if you want:
-# systemctl enable --now system-maintenance-update.timer
 
-# Apply journald template if keys missing
+# journald template
 JOURNAL_CONF="/etc/systemd/journald.conf"
 if ! grep -q '^SystemMaxUse=' "$JOURNAL_CONF" 2>/dev/null; then
+  echo "Applying journald template..."
   cat "$BASE_DIR/config/journald.conf.template" >> "$JOURNAL_CONF"
   systemctl restart systemd-journald
 fi
 
 # Install Webmin module
+echo "Installing Webmin module..."
+rm -rf "$WEBMIN_DIR"
 mkdir -p "$WEBMIN_DIR"
 cp -a "$BASE_DIR/webmin-module/." "$WEBMIN_DIR/"
 chmod +x "$WEBMIN_DIR"/*.cgi
 
-# Try to restart Webmin if present
+# Install Webmin config
+mkdir -p "$WEBMIN_ETC"
+cp "$BASE_DIR/webmin-module/config" "$WEBMIN_ETC/config"
+chmod 600 "$WEBMIN_ETC/config"
+
+# Clear Webmin module cache
+rm -f /etc/webmin/module.infos.cache
+
+# Restart Webmin
 if systemctl status webmin >/dev/null 2>&1; then
   systemctl restart webmin
 fi
 
-echo "Installation complete. Open Webmin → System → System Maintenance."
+echo "Installation complete."
+echo "IMPORTANT: Grant yourself access in Webmin → Webmin Users → Available Modules → System Maintenance"
