@@ -6,8 +6,8 @@ use strict;
 use warnings;
 
 # Webmin core
-require 'web-lib.pl';
-require 'ui-lib.pl';
+use WebminCore; 
+init_config();
 
 # Path to journald config
 my $JOURNAL_CONF = "/etc/systemd/journald.conf";
