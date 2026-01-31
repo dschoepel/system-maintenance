@@ -1,5 +1,10 @@
 #!/usr/bin/perl
 # index.cgi — System Maintenance Dashboard
+use strict; 
+use warnings; 
+
+use WebminCore; 
+init_config();
 
 require './system-maintenance-lib.pl';
 &ui_print_header(undef, "System Maintenance Dashboard", "");

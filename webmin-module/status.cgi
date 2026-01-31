@@ -1,5 +1,10 @@
 #!/usr/bin/perl
 # status.cgi — Detailed maintenance status and logs
+use strict; 
+use warnings; 
+
+use WebminCore; 
+init_config();
 
 require './system-maintenance-lib.pl';
 &ui_print_header(undef, "System Maintenance Status", "");

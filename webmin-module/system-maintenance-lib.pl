@@ -1,5 +1,6 @@
 # system-maintenance-lib.pl
 # Shared helpers for the System Maintenance Webmin module
+package system_maintenance;
 
 use strict;
 use warnings;
