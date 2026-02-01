@@ -14,8 +14,10 @@ my $colored = colorize_logs($logs);
 print &WebminCore::ui_table_start("Recent Output", "width=100%");
 print &WebminCore::ui_table_row(
     "Logs",
-    "<pre style='background:#111;color:#0f0 !important;
-     padding:10px;border-radius:6px;height:80vh;overflow:auto;'>$colored</pre>"
+    "<div style='width:100%;max-width:100%;'>
+        <pre style='background:#111;color:#0f0 !important;
+        padding:10px;border-radius:6px;height:80vh;overflow:auto;'>$colored</pre>
+    </div>"
 );
 print &WebminCore::ui_table_end();
 
