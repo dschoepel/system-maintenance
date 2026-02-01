@@ -6,7 +6,8 @@ use WebminCore;
 init_config();
 require './system-maintenance-lib.pl';
 
-&WebminCore::ui_print_header(undef, "System Maintenance Status", "", "system-maintenance");
+&WebminCore::ui_print_header(undef, "System Maintenance Status", "", "system-maintenance", undef, 1);
+
 
 my $logs = read_recent_logs();
 my $colored = colorize_logs($logs);

@@ -6,7 +6,7 @@ use WebminCore;
 init_config();
 require './system-maintenance-lib.pl';
 
-&WebminCore::ui_print_header(undef, "Run Maintenance (Live)", "", "system-maintenance");
+&WebminCore::ui_print_header(undef, "Run Maintenance (Live)", "", "system-maintenance", undef, 1);
 
 my $output = run_maintenance_live();
 my $colored = colorize_logs($output);
