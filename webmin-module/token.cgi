@@ -7,12 +7,17 @@ init_config();
 
 my $ENV_FILE = "/etc/system-maintenance/env";
 
+# ------------------------------------------------------------
+# Read token from env file
+# ------------------------------------------------------------
 sub read_token {
     return ("Missing", "", "No token file found")
         if (! -f $ENV_FILE);
 
     my $token = "";
-    if (open(my $fh, "<", $ENV_FILE)) {
+    my $fh;
+
+    if (open($fh, "<", $ENV_FILE)) {
         while (my $line = <$fh>) {
             chomp($line);
             next if $line =~ /^\s*#/;
@@ -35,6 +40,9 @@ sub read_token {
     return ("Configured", $token, "Token present ($masked)");
 }
 
+# ------------------------------------------------------------
+# Write token to env file
+# ------------------------------------------------------------
 sub write_token {
     my ($token) = @_;
 
@@ -43,7 +51,8 @@ sub write_token {
         mkdir $dir, 0755 or return "Failed to create $dir: $!";
     }
 
-    if (!open(my $fh, ">", $ENV_FILE)) {
+    my $fh;
+    if (!open($fh, ">", $ENV_FILE)) {
         return "Unable to write $ENV_FILE: $!";
     }
 
@@ -55,6 +64,9 @@ sub write_token {
     return "";
 }
 
+# ------------------------------------------------------------
+# Test GitHub access
+# ------------------------------------------------------------
 sub test_github_access {
     my ($token) = @_;
     return ("error", "No token configured") if !$token;
@@ -70,21 +82,23 @@ sub test_github_access {
     if ($code eq "200") {
         return ("ok", "GitHub access successful (HTTP 200 from /user)");
     } elsif ($code eq "401") {
-        return ("error", "GitHub returned 401 Unauthorized. Token is invalid or lacks required scopes.");
+        return ("error", "GitHub returned 401 Unauthorized. Token invalid or missing scopes.");
     } elsif ($code eq "") {
-        return ("error", "No response from GitHub. Check network connectivity and curl availability.");
+        return ("error", "No response from GitHub. Check network connectivity.");
     } else {
-        return ("error", "GitHub returned HTTP $code. Token may be invalid or missing permissions.");
+        return ("error", "GitHub returned HTTP $code. Token may be invalid.");
     }
 }
 
-# Parse params
+# ------------------------------------------------------------
+# Handle actions
+# ------------------------------------------------------------
 my %in;
 &ReadParse(\%in);
 
 my $action = $in{'action'} || "";
 my $message = "";
-my $message_type = ""; # "ok" or "error"
+my $message_type = "";
 
 if ($action eq "save") {
     my $new_token = $in{'token'} // "";
@@ -116,16 +130,16 @@ elsif ($action eq "test") {
     }
 }
 
+# ------------------------------------------------------------
+# Render page
+# ------------------------------------------------------------
 my ($token_status, $current_token, $token_details) = read_token();
-my $masked = $token_status eq "Configured"
-    ? ($token_details =~ /\((.+)\)/ ? $1 : "********")
-    : "";
+my $badge_class =
+    $token_status eq "Configured" ? "badge-ok" :
+    $token_status eq "Missing"    ? "badge-err" :
+                                    "badge-warn";
 
 print "Content-type: text/html\n\n";
-
-my $badge_class = $token_status eq "Configured"
-    ? "badge-ok"
-    : ($token_status eq "Missing" ? "badge-err" : "badge-warn");
 
 print <<"HTML";
 <!DOCTYPE html>
@@ -156,7 +170,7 @@ print <<"HTML";
     .message-ok { border: 1px solid #2e7d32; background: #e8f5e9; }
     .message-error { border: 1px solid #c62828; background: #ffebee; }
     label { display: block; margin-top: 10px; }
-    input[type="text"], input[type="password"] {
+    input[type="password"] {
       width: 100%;
       max-width: 600px;
       padding: 6px 8px;
@@ -189,6 +203,7 @@ print <<"HTML";
 </head>
 <body>
   <h1>Manage GitHub Token</h1>
+
   <p>
     <strong>Status:</strong>
     <span class="badge $badge_class">$token_status</span>
@@ -199,20 +214,15 @@ HTML
 if ($message ne "") {
     my $cls = $message_type eq "ok" ? "message-ok" : "message-error";
     print <<"HTML";
-  <div class="message $cls">
-    $message
-  </div>
+  <div class="message $cls">$message</div>
 HTML
 }
-
-my $value_attr = $current_token ne "" ? " value=\"\"" : "";
-my $placeholder = $current_token ne "" ? "Leave blank to keep existing token" : "Enter GitHub fine-grained token";
 
 print <<"HTML";
   <form action="token.cgi" method="post">
     <input type="hidden" name="action" value="save">
     <label for="token">GitHub Token</label>
-    <input type="password" id="token" name="token" placeholder="$placeholder"$value_attr>
+    <input type="password" id="token" name="token" placeholder="Enter new token">
     <div class="actions">
       <button type="submit">Save Token</button>
     </div>
@@ -225,10 +235,9 @@ print <<"HTML";
     </form>
   </div>
 
-  <a href="index.cgi" class="back-link">&larr; Back to System Maintenance Dashboard</a>
+  <a href="index.cgi" class="back-link">&larr; Back to Dashboard</a>
 </body>
 </html>
 HTML
 
 exit 0;
-
