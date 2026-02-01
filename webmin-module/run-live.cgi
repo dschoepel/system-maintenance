@@ -4,6 +4,12 @@ use warnings;
 use IO::Handle;
 use WebminCore;
 
+# Import Webmin UI helpers
+our @EXPORT = qw(
+    ui_raw ui_table_start ui_table_row ui_table_end
+    ui_print_header ui_print_footer ui_link
+);
+
 init_config();
 require './system-maintenance-lib.pl';
 
@@ -13,7 +19,6 @@ select(STDOUT); $| = 1;
 
 &ui_print_header(undef, "Run Maintenance (Live Output)", "");
 
-# CSS override for Authentic Theme + spinner
 print <<'EOF';
 <style>
 /* Fix Authentic Theme overriding <pre> colors */
@@ -58,7 +63,6 @@ sleep(1);
 
 print "[INFO] Streaming logs...\n\n";
 
-# Open journalctl -f
 open(my $fh, "-|", "journalctl -u system-maintenance.service -f --no-pager")
     or die "Cannot stream logs: $!";
 
