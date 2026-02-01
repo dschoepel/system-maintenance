@@ -85,14 +85,14 @@ sub colorize_logs {
 
 sub run_maintenance_once {
     # Direct execution of the maintenance script
-    my $cmd = "/opt/system-maintenance-repo/scripts/system-maintenance.sh 2>&1";
+    my $cmd = "bin/bash /opt/system-maintenance-repo/scripts/system-maintenance.sh 2>&1";
     my $output = qx{$cmd};
     return $output;
 }
 
 sub run_maintenance_live {
     # Same as once — Webmin can't truly stream, so we capture full output
-    my $cmd = "/opt/system-maintenance-repo/scripts/system-maintenance.sh 2>&1";
+    my $cmd = "bin/bash /opt/system-maintenance-repo/scripts/system-maintenance.sh 2>&1";
     my $output = qx{$cmd};
     return $output;
 }
