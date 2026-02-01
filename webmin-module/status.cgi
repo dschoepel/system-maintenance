@@ -1,58 +1,54 @@
 #!/usr/bin/perl
-# status.cgi — Detailed maintenance status and logs
 use strict;
 use warnings;
-
 use WebminCore;
-init_config();
 
+init_config();
 require './system-maintenance-lib.pl';
+
 &ui_print_header(undef, "System Maintenance Status", "");
 
-print &ui_subheading("Maintenance Timing");
+print <<'EOF';
+<style>
+pre span {
+    color: inherit !important;
+}
+.fullwidth {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+</style>
+EOF
 
-my $last_run = get_last_run();
-my $next_run = get_next_run();
+my %caps = read_journald_config();
+my $last = get_last_run();
+my $next = get_next_run();
 
-print &ui_table_start("Run Information", "width=100%");
-print &ui_table_row("Last Run", $last_run);
-print &ui_table_row("Next Scheduled Run", $next_run);
+print "<div class='fullwidth'>";
+
+print &ui_table_start("Maintenance Information", "width=100%");
+print &ui_table_row("Last Run", $last);
+print &ui_table_row("Next Scheduled Run", $next);
+print &ui_table_row("SystemMaxUse", $caps{'SystemMaxUse'});
+print &ui_table_row("SystemKeepFree", $caps{'SystemKeepFree'});
+print &ui_table_row("MaxFileSec", $caps{'MaxFileSec'});
 print &ui_table_end();
 
 print "<br>";
 
-print &ui_subheading("Journald Configuration");
-
-my %journal = read_journald_config();
-
-print &ui_table_start("Journald Caps", "width=100%");
-print &ui_table_row("SystemMaxUse",  $journal{'SystemMaxUse'});
-print &ui_table_row("SystemKeepFree", $journal{'SystemKeepFree'});
-print &ui_table_row("MaxFileSec",    $journal{'MaxFileSec'});
-print &ui_table_end();
-
-print "<br>";
-
-print &ui_subheading("Disk Usage Summary");
-
-my $disk = run_cmd("df -h /");
-print &ui_table_start("Disk Usage", "width=100%");
-print &ui_table_row("Root Filesystem", "<pre>$disk</pre>");
-print &ui_table_end();
-
-print "<br>";
-
-print &ui_subheading("Recent Maintenance Logs");
-
-my $logs = run_cmd("journalctl -u system-maintenance.service --no-pager -n 200");
-
-print &ui_table_start("Logs", "width=100%");
+my $logs = run_cmd("journalctl -u system-maintenance.service --no-pager -n 100");
 my $colored = colorize_logs($logs);
-print &ui_table_row("Recent Output", "<pre>$colored</pre>");
+
+print &ui_table_start("Recent Output", "width=100%");
+print &ui_table_row("Logs",
+    &ui_raw("<pre style='background:#111;color:#0f0 !important;
+             padding:10px;border-radius:6px;height:80vh;overflow:auto;'>$colored</pre>")
+);
 print &ui_table_end();
 
-print "<br>";
+print "</div>";
 
+print "<br>";
 print &ui_link("index.cgi", "Return to Dashboard");
 
 &ui_print_footer();
