@@ -10,7 +10,8 @@ $| = 1;
 
 &ui_print_header(undef, "Run Maintenance (Live Output)", "");
 
-print qq(
+# CSS block using a single-quoted heredoc (NO interpolation)
+print <<'EOF';
 <style>
 .spinner {
   border: 4px solid #333;
@@ -27,7 +28,7 @@ print qq(
   100% { transform: rotate(360deg); }
 }
 </style>
-);
+EOF
 
 print "<div class='spinner'></div> <b>Running maintenance… streaming live output</b><br><br>";
 
@@ -57,11 +58,9 @@ print "[INFO] Fetching last 50 log lines...\n\n";
 my $summary = run_cmd("journalctl -u system-maintenance.service --no-pager -n 50");
 print colorize_logs($summary) . "\n";
 
-
 print "</pre>";
 
 print "<br>";
 print &ui_link("index.cgi", "Return to Dashboard");
 
 &ui_print_footer();
-
