@@ -62,4 +62,21 @@ sub colorize_logs {
     return $text;
 }
 
+sub read_recent_logs {
+    my $logfile = "/var/log/system-maintenance.log";
+
+    return "No logs found" if (! -f $logfile);
+
+    my $content = "";
+    if (open(my $fh, "<", $logfile)) {
+        local $/ = undef;   # slurp mode
+        $content = <$fh>;
+        close($fh);
+    } else {
+        return "Unable to read log file: $!";
+    }
+
+    return $content;
+}
+
 1;
