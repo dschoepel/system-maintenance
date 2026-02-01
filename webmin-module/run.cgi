@@ -2,38 +2,24 @@
 use strict;
 use warnings;
 use WebminCore;
-
 init_config();
+
 require './system-maintenance-lib.pl';
 
-&WebminCore::ui_print_header(undef, "Run Maintenance", "");
+&WebminCore::ui_print_header(undef, "Run Maintenance", "", "system-maintenance");
 
-print <<'EOF';
-<style>
-pre span {
-    color: inherit !important;
-}
-.fullwidth {
-    width: 100% !important;
-    max-width: 100% !important;
-}
-</style>
-EOF
+my $output = run_maintenance_once();
+my $colored = colorize_logs($output);
 
-print "<div class='fullwidth'>";
-print "<pre style='background:#111;color:#0f0 !important;
-       padding:10px;border-radius:6px;height:80vh;overflow:auto;'>";
-
-print "[INFO] Starting system-maintenance.service...\n";
-my $out = run_cmd("systemctl start system-maintenance.service");
-print colorize_logs($out) . "\n";
-
-print "\n[INFO] Fetching last 50 log lines...\n\n";
-my $logs = run_cmd("journalctl -u system-maintenance.service --no-pager -n 50");
-print colorize_logs($logs);
-
-print "</pre>";
-print "</div>";
+print &WebminCore::ui_table_start("Run Output", "width=100%");
+print &WebminCore::ui_table_row(
+    "Output",
+    &WebminCore::ui_html(
+        "<pre style='background:#111;color:#0f0 !important;
+         padding:10px;border-radius:6px;height:80vh;overflow:auto;'>$colored</pre>"
+    )
+);
+print &WebminCore::ui_table_end();
 
 print "<br>";
 print &WebminCore::ui_link("index.cgi", "Return to Dashboard");

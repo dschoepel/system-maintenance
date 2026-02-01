@@ -7,9 +7,9 @@ my $JOURNAL_CONF = "/etc/systemd/journald.conf";
 
 sub read_journald_config {
     my %caps = (
-        'SystemMaxUse'  => 'Not set',
-        'SystemKeepFree'=> 'Not set',
-        'MaxFileSec'    => 'Not set'
+        'SystemMaxUse'   => 'Not set',
+        'SystemKeepFree' => 'Not set',
+        'MaxFileSec'     => 'Not set'
     );
 
     if (open(my $fh, "<", $JOURNAL_CONF)) {
