@@ -146,9 +146,17 @@ print qq{
 
   <h2>Actions</h2>
   <div class="actions">
-    <form action="run.cgi" method="post">
-      <button type="submit">Run Maintenance Now</button>
-    </form>
+    <a href="run.cgi" style=" 
+    display:inline-block; 
+    margin:4px 8px 4px 0; 
+    padding:6px 12px; 
+    text-decoration:none; 
+    border-radius:4px; 
+    border:1px solid #1976d2; 
+    background:#1976d2; 
+    color:#fff; 
+    font-size:0.9rem; 
+    ">Run Maintenance Now</a>
 
     <a href="run-live.cgi">Run Maintenance (Live Output)</a>
     <a href="status.cgi" class="secondary">View Detailed Status and Logs</a>
