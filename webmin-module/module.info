@@ -1,5 +1,6 @@
 desc=System Maintenance
 category=system
+full_width=1
 usermin=0
 version=1.0
 depends=
