@@ -3,16 +3,10 @@ use strict;
 use warnings;
 use WebminCore;
 
-# Import Webmin UI helpers
-our @EXPORT = qw(
-    ui_raw ui_table_start ui_table_row ui_table_end
-    ui_print_header ui_print_footer ui_link
-);
-
 init_config();
 require './system-maintenance-lib.pl';
 
-&ui_print_header(undef, "Run Maintenance", "");
+&WebminCore::ui_print_header(undef, "Run Maintenance", "");
 
 print <<'EOF';
 <style>
@@ -42,6 +36,6 @@ print "</pre>";
 print "</div>";
 
 print "<br>";
-print &ui_link("index.cgi", "Return to Dashboard");
+print &WebminCore::ui_link("index.cgi", "Return to Dashboard");
 
-&ui_print_footer();
+&WebminCore::ui_print_footer();

@@ -4,12 +4,6 @@ use warnings;
 use IO::Handle;
 use WebminCore;
 
-# Import Webmin UI helpers
-our @EXPORT = qw(
-    ui_raw ui_table_start ui_table_row ui_table_end
-    ui_print_header ui_print_footer ui_link
-);
-
 init_config();
 require './system-maintenance-lib.pl';
 
@@ -17,7 +11,7 @@ require './system-maintenance-lib.pl';
 $| = 1;
 select(STDOUT); $| = 1;
 
-&ui_print_header(undef, "Run Maintenance (Live Output)", "");
+&WebminCore::ui_print_header(undef, "Run Maintenance (Live Output)", "");
 
 print <<'EOF';
 <style>
@@ -70,7 +64,7 @@ my $start = time();
 
 while (my $line = <$fh>) {
     print colorize_logs($line);
-    print "<br>\n";      # forces Webmin flush
+    print "<br>\n";      # forces Webmin/Authentic to flush
     STDOUT->flush();     # double flush
     last if time() - $start > 10;
 }
@@ -87,6 +81,6 @@ print "</pre>";
 print "</div>";
 
 print "<br>";
-print &ui_link("index.cgi", "Return to Dashboard");
+print &WebminCore::ui_link("index.cgi", "Return to Dashboard");
 
-&ui_print_footer();
+&WebminCore::ui_print_footer();
