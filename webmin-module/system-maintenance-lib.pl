@@ -79,24 +79,22 @@ sub colorize_logs {
     return $text;
 }
 
-sub run_maintenance_once {
-    # Run the system-maintenance service manually
-    my $cmd = "systemctl start system-maintenance.service";
-    my $out = run_cmd($cmd);
+# ------------------------------------------------------------
+# Deterministic synchronous execution for Webmin UI
+# ------------------------------------------------------------
 
-    # Read logs after running
-    my $logs = read_recent_logs();
-    return $logs;
+sub run_maintenance_once {
+    # Direct execution of the maintenance script
+    my $cmd = "/opt/system-maintenance-repo/scripts/system-maintenance.sh 2>&1";
+    my $output = qx{$cmd};
+    return $output;
 }
 
 sub run_maintenance_live {
-    # Same as once, but intended for the live view
-    my $cmd = "systemctl start system-maintenance.service";
-    my $out = run_cmd($cmd);
-
-    # Return updated logs
-    my $logs = read_recent_logs();
-    return $logs;
+    # Same as once — Webmin can't truly stream, so we capture full output
+    my $cmd = "/opt/system-maintenance-repo/scripts/system-maintenance.sh 2>&1";
+    my $output = qx{$cmd};
+    return $output;
 }
 
 1;
