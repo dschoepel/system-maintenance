@@ -79,4 +79,24 @@ sub colorize_logs {
     return $text;
 }
 
+sub run_maintenance_once {
+    # Run the system-maintenance service manually
+    my $cmd = "systemctl start system-maintenance.service";
+    my $out = run_cmd($cmd);
+
+    # Read logs after running
+    my $logs = read_recent_logs();
+    return $logs;
+}
+
+sub run_maintenance_live {
+    # Same as once, but intended for the live view
+    my $cmd = "systemctl start system-maintenance.service";
+    my $out = run_cmd($cmd);
+
+    # Return updated logs
+    my $logs = read_recent_logs();
+    return $logs;
+}
+
 1;
