@@ -1,9 +1,9 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
+
 use WebminCore;
 init_config();
-
 require './system-maintenance-lib.pl';
 
 &WebminCore::ui_print_header(undef, "Run Maintenance", "", "system-maintenance");
@@ -14,10 +14,8 @@ my $colored = colorize_logs($output);
 print &WebminCore::ui_table_start("Run Output", "width=100%");
 print &WebminCore::ui_table_row(
     "Output",
-    &WebminCore::ui_html(
-        "<pre style='background:#111;color:#0f0 !important;
-         padding:10px;border-radius:6px;height:80vh;overflow:auto;'>$colored</pre>"
-    )
+    "<pre style='background:#111;color:#0f0 !important;
+     padding:10px;border-radius:6px;height:80vh;overflow:auto;'>$colored</pre>"
 );
 print &WebminCore::ui_table_end();
 

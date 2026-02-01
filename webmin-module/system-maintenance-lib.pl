@@ -46,6 +46,23 @@ sub get_next_run {
     return $ts eq "" ? "Unknown" : $ts;
 }
 
+sub read_recent_logs {
+    my $logfile = "/var/log/system-maintenance.log";
+
+    return "No logs found" if (! -f $logfile);
+
+    my $content = "";
+    if (open(my $fh, "<", $logfile)) {
+        local $/ = undef;
+        $content = <$fh>;
+        close($fh);
+    } else {
+        return "Unable to read log file: $!";
+    }
+
+    return $content;
+}
+
 sub colorize_logs {
     my ($text) = @_;
 
@@ -60,23 +77,6 @@ sub colorize_logs {
     $text =~ s/\b(ERROR|Error|error|ERR|FAIL|FAILED)\b/<span style='color:#f33;font-weight:bold;'>$1<\/span>/g;
 
     return $text;
-}
-
-sub read_recent_logs {
-    my $logfile = "/var/log/system-maintenance.log";
-
-    return "No logs found" if (! -f $logfile);
-
-    my $content = "";
-    if (open(my $fh, "<", $logfile)) {
-        local $/ = undef;   # slurp mode
-        $content = <$fh>;
-        close($fh);
-    } else {
-        return "Unable to read log file: $!";
-    }
-
-    return $content;
 }
 
 1;
