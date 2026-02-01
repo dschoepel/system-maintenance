@@ -1,0 +1,9 @@
+<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <g stroke="#4A4A4A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Gear -->
+    <circle cx="24" cy="24" r="8"/>
+    <path d="M24 6v6M24 36v6M6 24h6M36 24h6M11 11l4 4M33 33l4 4M11 37l4-4M33 15l4-4"/>
+    <!-- Checkmark -->
+    <path d="M18 24l4 4 8-8"/>
+  </g>
+</svg>
