@@ -6,11 +6,13 @@ use WebminCore;
 init_config();
 require './system-maintenance-lib.pl';
 
+# Disable buffering everywhere
 $| = 1;
+select(STDOUT); $| = 1;
 
 &ui_print_header(undef, "Run Maintenance (Live Output)", "");
 
-# CSS block using a single-quoted heredoc (NO interpolation)
+# CSS (no interpolation)
 print <<'EOF';
 <style>
 .spinner {
@@ -41,11 +43,15 @@ sleep(1);
 
 print "[INFO] Streaming logs...\n\n";
 
-open(my $fh, "-|", "journalctl -u system-maintenance.service -f --no-pager");
+# Open journalctl -f
+open(my $fh, "-|", "journalctl -u system-maintenance.service -f --no-pager") 
+    or die "Cannot stream logs: $!";
 
 my $start = time();
+
 while (my $line = <$fh>) {
     print colorize_logs($line);
+    print "<!-- flush -->\n";   # forces Webmin to flush output
     $| = 1;
     last if time() - $start > 10;
 }
