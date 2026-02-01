@@ -46,6 +46,10 @@ print &ui_form_end();
 
 print "<br>";
 
+# NEW: Live output runner 
+print &ui_link("run-live.cgi", "Run Maintenance (Live Output)"); 
+print "<br><br>";
+
 print &ui_link("status.cgi", "View Detailed Status and Logs");
 
 &ui_print_footer();

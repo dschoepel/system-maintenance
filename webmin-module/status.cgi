@@ -1,9 +1,9 @@
 #!/usr/bin/perl
 # status.cgi — Detailed maintenance status and logs
-use strict; 
-use warnings; 
+use strict;
+use warnings;
 
-use WebminCore; 
+use WebminCore;
 init_config();
 
 require './system-maintenance-lib.pl';
@@ -47,7 +47,8 @@ print &ui_subheading("Recent Maintenance Logs");
 my $logs = run_cmd("journalctl -u system-maintenance.service --no-pager -n 200");
 
 print &ui_table_start("Logs", "width=100%");
-print &ui_table_row("Recent Output", "<pre>$logs</pre>");
+my $colored = colorize_logs($logs);
+print &ui_table_row("Recent Output", "<pre>$colored</pre>");
 print &ui_table_end();
 
 print "<br>";

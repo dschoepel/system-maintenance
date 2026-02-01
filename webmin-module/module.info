@@ -5,3 +5,11 @@ version=1.0
 depends=
 longdesc=Unified system maintenance dashboard and controls (systemd + journald)
 icons=system-maintenance
+
+# Main dashboard
+page=index.cgi
+title=Dashboard
+
+# Token management page
+page=token.cgi
+title=Manage GitHub Token

@@ -1,4 +1,4 @@
-dschoepel@neptune:/opt/system#!/bin/bash
+#!/bin/bash
 set -e
 
 log() {
@@ -30,6 +30,8 @@ install -m 0644 "$REPO_DIR/systemd/system-maintenance-update.timer" /etc/systemd
 log "Reloading systemd and enabling timer"
 systemctl daemon-reload
 systemctl enable --now system-maintenance.timer
+# Optional: enable update timer
+# systemctl enable --now system-maintenance-update.timer
 
 # journald template
 JOURNAL_CONF="/etc/systemd/journald.conf"
@@ -46,26 +48,39 @@ log "Installing Webmin module"
 rm -rf "$WEBMIN_DIR"
 mkdir -p "$WEBMIN_DIR"
 cp -a "$REPO_DIR/webmin-module/." "$WEBMIN_DIR/"
-chmod 755 "$WEBMIN_DIR"/*.cgi
-chmod 644 "$WEBMIN_DIR"/*.pl
+
+# Safe chmod patterns
+shopt -s nullglob
+chmod 755 "$WEBMIN_DIR"/*.cgi || true
+chmod 644 "$WEBMIN_DIR"/*.pl || true
+shopt -u nullglob
+
 chmod 644 "$WEBMIN_DIR/module.info"
 
-# REQUIRED: module-local config file
-log "Creating Webmin module config file"
-echo "desc=System Maintenance" > "$WEBMIN_DIR/config"
-chmod 644 "$WEBMIN_DIR/config"
+# REQUIRED: module-local config file (create only if missing)
+if [ ! -f "$WEBMIN_DIR/config" ]; then
+  log "Creating Webmin module config file"
+  echo "desc=System Maintenance" > "$WEBMIN_DIR/config"
+  chmod 644 "$WEBMIN_DIR/config"
+fi
 
-# REQUIRED: lang/en file
-log "Creating Webmin module lang/en file"
-mkdir -p "$WEBMIN_DIR/lang"
-echo "desc=System Maintenance" > "$WEBMIN_DIR/lang/en"
-chmod 644 "$WEBMIN_DIR/lang/en"
+# REQUIRED: lang/en file (create only if missing)
+if [ ! -f "$WEBMIN_DIR/lang/en" ]; then
+  log "Creating Webmin module lang/en file"
+  mkdir -p "$WEBMIN_DIR/lang"
+  echo "desc=System Maintenance" > "$WEBMIN_DIR/lang/en"
+  chmod 644 "$WEBMIN_DIR/lang/en"
+fi
 
 # Install Webmin ETC config (user settings)
 log "Installing Webmin ETC config"
 mkdir -p "$WEBMIN_ETC"
-cp "$REPO_DIR/webmin-module/config" "$WEBMIN_ETC/config"
-chmod 600 "$WEBMIN_ETC/config"
+if [ ! -f "$WEBMIN_ETC/config" ]; then
+  cp "$REPO_DIR/webmin-module/config" "$WEBMIN_ETC/config"
+  chmod 600 "$WEBMIN_ETC/config"
+else
+  log "Preserving existing Webmin ETC config"
+fi
 
 # Clear Webmin module cache
 log "Clearing Webmin module cache"
