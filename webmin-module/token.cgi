@@ -7,9 +7,6 @@ init_config();
 
 my $ENV_FILE = "/etc/system-maintenance/env";
 
-# ------------------------------------------------------------
-# Read token from env file
-# ------------------------------------------------------------
 sub read_token {
     return ("Missing", "", "No token file found")
         if (! -f $ENV_FILE);
@@ -40,9 +37,6 @@ sub read_token {
     return ("Configured", $token, "Token present ($masked)");
 }
 
-# ------------------------------------------------------------
-# Write token to env file
-# ------------------------------------------------------------
 sub write_token {
     my ($token) = @_;
 
@@ -64,9 +58,6 @@ sub write_token {
     return "";
 }
 
-# ------------------------------------------------------------
-# Test GitHub access
-# ------------------------------------------------------------
 sub test_github_access {
     my ($token) = @_;
     return ("error", "No token configured") if !$token;
@@ -90,9 +81,6 @@ sub test_github_access {
     }
 }
 
-# ------------------------------------------------------------
-# Handle actions
-# ------------------------------------------------------------
 my %in;
 &ReadParse(\%in);
 
@@ -130,99 +118,93 @@ elsif ($action eq "test") {
     }
 }
 
-# ------------------------------------------------------------
-# Render page
-# ------------------------------------------------------------
 my ($token_status, $current_token, $token_details) = read_token();
 my $badge_class =
     $token_status eq "Configured" ? "badge-ok" :
     $token_status eq "Missing"    ? "badge-err" :
                                     "badge-warn";
 
-print "Content-type: text/html\n\n";
+&ui_print_header(undef, "Manage GitHub Token", "", "system-maintenance");
 
-print <<"HTML";
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <title>Manage GitHub Token</title>
-  <style>
-    body { font-family: sans-serif; margin: 20px; }
-    h1 { margin-bottom: 0.5rem; }
-    .badge {
-      display: inline-block;
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-size: 0.85rem;
-      font-weight: bold;
-      color: #fff;
-    }
-    .badge-ok { background: #2e7d32; }
-    .badge-warn { background: #f9a825; }
-    .badge-err { background: #c62828; }
-    .message {
-      border-radius: 4px;
-      padding: 8px 10px;
-      margin: 10px 0 20px 0;
-      max-width: 800px;
-    }
-    .message-ok { border: 1px solid #2e7d32; background: #e8f5e9; }
-    .message-error { border: 1px solid #c62828; background: #ffebee; }
-    label { display: block; margin-top: 10px; }
-    input[type="password"] {
-      width: 100%;
-      max-width: 600px;
-      padding: 6px 8px;
-      margin-top: 4px;
-      box-sizing: border-box;
-    }
-    button {
-      margin-top: 12px;
-      padding: 6px 12px;
-      border-radius: 4px;
-      border: 1px solid #1976d2;
-      background: #1976d2;
-      color: #fff;
-      cursor: pointer;
-      font-size: 0.9rem;
-    }
-    button.secondary {
-      background: #fff;
-      color: #1976d2;
-    }
-    .actions { margin-top: 10px; }
-    .actions form { display: inline; }
-    a.back-link {
-      display: inline-block;
-      margin-top: 20px;
-      text-decoration: none;
-      color: #1976d2;
-    }
-  </style>
-</head>
-<body>
-  <h1>Manage GitHub Token</h1>
+print <<'CSS';
+<style>
+  body { font-family: sans-serif; }
+  h1 { margin-bottom: 0.5rem; }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: #fff;
+  }
+  .badge-ok { background: #2e7d32; }
+  .badge-warn { background: #f9a825; }
+  .badge-err { background: #c62828; }
+  .message {
+    border-radius: 4px;
+    padding: 8px 10px;
+    margin: 10px 0 20px 0;
+    max-width: 800px;
+  }
+  .message-ok { border: 1px solid #2e7d32; background: #e8f5e9; }
+  .message-error { border: 1px solid #c62828; background: #ffebee; }
+  label { display: block; margin-top: 10px; }
+  input[type="password"] {
+    width: 100%;
+    max-width: 600px;
+    padding: 6px 8px;
+    margin-top: 4px;
+    box-sizing: border-box;
+  }
+  button {
+    margin-top: 12px;
+    padding: 6px 12px;
+    border-radius: 4px;
+    border: 1px solid #1976d2;
+    background: #1976d2;
+    color: #fff;
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
+  button.secondary {
+    background: #fff;
+    color: #1976d2;
+  }
+  .actions { margin-top: 10px; }
+  .actions form { display: inline; }
+  a.back-link {
+    display: inline-block;
+    margin-top: 20px;
+    text-decoration: none;
+    color: #1976d2;
+  }
+</style>
+CSS
 
+print "<h1>Manage GitHub Token</h1>\n";
+print qq{
   <p>
     <strong>Status:</strong>
     <span class="badge $badge_class">$token_status</span>
     &nbsp; <span>$token_details</span>
   </p>
-HTML
+};
 
 if ($message ne "") {
     my $cls = $message_type eq "ok" ? "message-ok" : "message-error";
-    print <<"HTML";
-  <div class="message $cls">$message</div>
-HTML
+    print qq{
+      <div class="message $cls">$message</div>
+    };
 }
 
-print <<"HTML";
+my $placeholder = $current_token ne "" ? "Enter new token (leave blank to keep existing)" : "Enter GitHub fine-grained token";
+
+print qq{
   <form action="token.cgi" method="post">
     <input type="hidden" name="action" value="save">
     <label for="token">GitHub Token</label>
-    <input type="password" id="token" name="token" placeholder="Enter new token">
+    <input type="password" id="token" name="token" placeholder="$placeholder">
     <div class="actions">
       <button type="submit">Save Token</button>
     </div>
@@ -235,9 +217,8 @@ print <<"HTML";
     </form>
   </div>
 
-  <a href="index.cgi" class="back-link">&larr; Back to Dashboard</a>
-</body>
-</html>
-HTML
+  <a href="index.cgi" class="back-link">&larr; Back to System Maintenance Dashboard</a>
+};
 
+&ui_print_footer();
 exit 0;

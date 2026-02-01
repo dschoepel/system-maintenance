@@ -23,3 +23,4 @@ print "<br>";
 print &WebminCore::ui_link("index.cgi", "Return to Dashboard");
 
 &WebminCore::ui_print_footer();
+
