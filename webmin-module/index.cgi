@@ -159,9 +159,10 @@ print <<"HTML";
 
     <a href="run-live.cgi">Run Maintenance (Live Output)</a>
     <a href="status.cgi" class="secondary">View Detailed Status and Logs</a>
-    <a href="token.cgi" class="secondary">Manage GitHub Token</a>
+    <a href="token.cgi?xnavigation=1" class="secondary">Manage GitHub Token</a>
 
-    <form action="token.cgi" method="get">
+    <form action="token.cgi" method="get"> 
+    <input type="hidden" name="xnavigation" value="1">
       <input type="hidden" name="action" value="test">
       <button type="submit" class="secondary">Test GitHub Access</button>
     </form>
