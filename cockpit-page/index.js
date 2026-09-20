@@ -75,20 +75,29 @@
         // ExecMainStartTimestamp is: it's specifically meant to persist as "last invocation"
         // history alongside ExecMainStatus, unlike the more activation-state-oriented
         // ActiveEnterTimestamp.
-        showProp(SERVICE, "ExecMainStartTimestamp").then((v) => {
-            el("last-run").textContent = v && v !== "n/a" ? v : "No recorded runs yet";
-        });
+        // Last Run and Last Exit Code are deliberately gated on the SAME "has this
+        // actually run" signal (ExecMainStartTimestamp), not on ExecMainStatus's own
+        // emptiness. Confirmed on Mercury Sep 20, 2026 (a genuinely fresh install,
+        // service never executed even once): ExecMainStatus reads back "0" -- not an
+        // empty string -- for a never-run unit, which would otherwise misreport as
+        // "Success (0)" instead of "No recorded runs yet". This wasn't caught during
+        // the original Neptune testing because a real run had always already happened
+        // there before the page was ever loaded.
+        showProp(SERVICE, "ExecMainStartTimestamp").then((startV) => {
+            const hasRun = startV && startV !== "n/a";
+            el("last-run").textContent = hasRun ? startV : "No recorded runs yet";
 
-        showProp(SERVICE, "ExecMainStatus").then((v) => {
             const node = el("last-exit");
-            if (v === "") {
+            if (!hasRun) {
                 node.textContent = "No recorded runs yet";
                 node.className = "value";
                 return;
             }
-            const n = parseInt(v, 10);
-            node.textContent = n === 0 ? "Success (0)" : "Failed (" + n + ")";
-            node.className = "value " + (n === 0 ? "ok" : "bad");
+            showProp(SERVICE, "ExecMainStatus").then((v) => {
+                const n = parseInt(v, 10);
+                node.textContent = Number.isNaN(n) ? "Unknown" : n === 0 ? "Success (0)" : "Failed (" + n + ")";
+                node.className = "value " + (n === 0 ? "ok" : "bad");
+            });
         });
 
         showProp(TIMER, "NextElapseUSecRealtime").then((v) => {
