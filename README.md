@@ -19,11 +19,9 @@ This repo is public — no token or private-repo auth needed to clone or update 
 
 **Deliberately does *not* run `apt-get upgrade`.** This tool's job is disk/log housekeeping, not
 patching — package upgrades belong to a purpose-built mechanism instead: Cockpit's own Software
-Updates page (visible, manual, deliberate control) or `unattended-upgrades` (if enabled on a given
-host; it's specifically designed for safe automated patching — security-only by default,
-reboot-aware — unlike a bare unattended `apt-get upgrade -y` in a cron script). An earlier version
-of this script did run `apt-get upgrade -y` weekly; removed 2026-09-20 as unjustified scope creep
-against tools already better suited to that job.
+Updates page (visible, manual, deliberate control) or `unattended-upgrades` (specifically designed
+for safe automated patching — security-only by default, reboot-aware — unlike a bare unattended
+`apt-get upgrade -y` in a cron script).
 
 ### Cockpit Integration
 - Dashboard: last run, next scheduled run, last exit code
