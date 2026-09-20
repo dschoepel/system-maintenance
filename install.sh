@@ -7,8 +7,7 @@ log() {
 
 REPO_DIR="/opt/system-maintenance-repo"
 INSTALL_DIR="/usr/local/system-maintenance"
-WEBMIN_DIR="/usr/share/webmin/system-maintenance"
-WEBMIN_ETC="/etc/webmin/system-maintenance"
+COCKPIT_DIR="/usr/share/cockpit/system-maintenance"
 
 log "Starting System Maintenance installation from $REPO_DIR"
 
@@ -43,56 +42,16 @@ else
   log "Journald template already applied"
 fi
 
-# Install Webmin module
-log "Installing Webmin module"
-rm -rf "$WEBMIN_DIR"
-mkdir -p "$WEBMIN_DIR"
-cp -a "$REPO_DIR/webmin-module/." "$WEBMIN_DIR/"
-
-# Safe chmod patterns
-shopt -s nullglob
-chmod 755 "$WEBMIN_DIR"/*.cgi || true
-chmod 644 "$WEBMIN_DIR"/*.pl || true
-shopt -u nullglob
-
-chmod 644 "$WEBMIN_DIR/module.info"
-
-# REQUIRED: module-local config file (create only if missing)
-if [ ! -f "$WEBMIN_DIR/config" ]; then
-  log "Creating Webmin module config file"
-  echo "desc=System Maintenance" > "$WEBMIN_DIR/config"
-  chmod 644 "$WEBMIN_DIR/config"
-fi
-
-# REQUIRED: lang/en file (create only if missing)
-if [ ! -f "$WEBMIN_DIR/lang/en" ]; then
-  log "Creating Webmin module lang/en file"
-  mkdir -p "$WEBMIN_DIR/lang"
-  echo "desc=System Maintenance" > "$WEBMIN_DIR/lang/en"
-  chmod 644 "$WEBMIN_DIR/lang/en"
-fi
-
-# Install Webmin ETC config (user settings)
-log "Installing Webmin ETC config"
-mkdir -p "$WEBMIN_ETC"
-if [ ! -f "$WEBMIN_ETC/config" ]; then
-  cp "$REPO_DIR/webmin-module/config" "$WEBMIN_ETC/config"
-  chmod 600 "$WEBMIN_ETC/config"
-else
-  log "Preserving existing Webmin ETC config"
-fi
-
-# Clear Webmin module cache
-log "Clearing Webmin module cache"
-rm -f /etc/webmin/module.infos.cache
-
-# Restart Webmin
-if systemctl status webmin >/dev/null 2>&1; then
-  log "Restarting Webmin"
-  systemctl restart webmin
-else
-  log "Webmin not running — skipping restart"
-fi
+# Install Cockpit page (replaces the old Webmin module -- see
+# webmin-module/DEPRECATED.md for history). No build step: just copy the
+# four static files into place. Cockpit picks up new Tools pages
+# automatically on next browser load, no service restart needed.
+log "Installing Cockpit page"
+mkdir -p "$COCKPIT_DIR"
+cp -a "$REPO_DIR/cockpit-page/." "$COCKPIT_DIR/"
+chown -R root:root "$COCKPIT_DIR"
+chmod 644 "$COCKPIT_DIR"/*
 
 log "Installation complete"
-echo "IMPORTANT: Grant yourself access in Webmin → Webmin Users → Available Modules → System Maintenance"
+echo "The System Maintenance page should now appear under Cockpit's Tools menu"
+echo "(hard-refresh the browser tab if it doesn't show up immediately)."

@@ -1,81 +1,67 @@
 
-# System Maintenance (Webmin + systemd)
+# System Maintenance (Cockpit + systemd)
 
-A standardized, reproducible maintenance system for Ubuntu servers.  
-Includes a Webmin UI, systemd timers, journald caps, Snap cleanup, and a secure Git‑based update workflow.
+A standardized, reproducible disk/log-housekeeping system for Ubuntu servers.
+Includes a native Cockpit dashboard page, a weekly systemd timer, and journald size caps.
 
-This repository contains the **private code** (systemd units, scripts, Webmin module).  
-Installation is performed using a **public bootstrap installer** hosted as a GitHub Gist.
+This repo is public — no token or private-repo auth needed to clone or update it.
 
 ---
 
 ## Features
 
 ### Automated Maintenance
-- APT cache cleanup  
-- Autoremove unused packages  
-- Snap old revision cleanup  
-- Journald size caps + vacuuming  
-- Generic cache cleanup  
+- APT cache cleanup
+- Autoremove unused packages
+- Snap old revision cleanup
+- Journald size caps + vacuuming
+- Generic cache cleanup
 
-### Webmin Integration
-- Dashboard (status, next run, exit code)  
-- Live output runner with spinner  
-- Colorized log viewer (INFO/WARN/ERROR)  
-- Token management UI  
-- Detailed status page  
+**Deliberately does *not* run `apt-get upgrade`.** This tool's job is disk/log housekeeping, not
+patching — package upgrades belong to a purpose-built mechanism instead: Cockpit's own Software
+Updates page (visible, manual, deliberate control) or `unattended-upgrades` (if enabled on a given
+host; it's specifically designed for safe automated patching — security-only by default,
+reboot-aware — unlike a bare unattended `apt-get upgrade -y` in a cron script). An earlier version
+of this script did run `apt-get upgrade -y` weekly; removed 2026-09-20 as unjustified scope creep
+against tools already better suited to that job.
+
+### Cockpit Integration
+- Dashboard: last run, next scheduled run, last exit code
+- Journald caps display (`SystemMaxUse` / `SystemKeepFree` / `MaxFileSec`)
+- Colorized (INFO/WARN/ERROR, case-insensitive) log viewer — last 200 lines
+- "Run Now" button — genuinely systemd-tracked (`systemctl start`), so a manual run updates the
+  same dashboard fields a scheduled run does
 
 ### Systemd
-- Weekly maintenance timer  
-- On‑demand service  
-- Optional auto‑update timer  
-
-### Security
-- GitHub token stored locally in `/etc/system-maintenance/env`  
-- Token never displayed in UI  
-- Repo remains private  
-- Bootstrap installer contains no secrets  
+- Weekly maintenance timer (`Sun 03:00`)
+- On-demand service
+- Optional auto-update timer (`system-maintenance-update.timer`, disabled by default — `git pull
+  --rebase` on the repo checkout weekly; enable it yourself if you want the repo to self-update)
 
 ---
 
 ## Installation
 
-### 1. Create the token file
+No token, no bootstrap script — just clone and run:
 
 ```bash
-sudo mkdir -p /etc/system-maintenance
-sudo chmod 700 /etc/system-maintenance
-echo "GITHUB_TOKEN=ghp_xxxxxxxxxxxxx" | sudo tee /etc/system-maintenance/env > /dev/null
-sudo chmod 600 /etc/system-maintenance/env
-```
-
-The token must have **read access** to this private repo.
-
----
-
-### 2. Run the public bootstrap installer
-
-```bash
-curl -fsSL https://gist.githubusercontent.com/dschoepel/f6a133d9ef557d79e56f9f62bd01b5e1/raw/bootstrap.sh | sudo bash
+sudo git clone https://github.com/dschoepel/system-maintenance.git /opt/system-maintenance-repo
+cd /opt/system-maintenance-repo
+sudo bash install.sh
 ```
 
 This will:
 
-- Install git if missing  
-- Clone or update this private repo  
-- Run `install.sh`  
-- Install systemd units  
-- Install journald config (idempotent)  
-- Install the Webmin module  
-- Restart Webmin if running  
+- Install the maintenance script to `/usr/local/system-maintenance/scripts/`
+- Install and enable the systemd units
+- Apply the journald caps template (only once — won't overwrite an existing `SystemMaxUse=` line)
+- Install the Cockpit page to `/usr/share/cockpit/system-maintenance/`
 
-The installer is **idempotent** and safe to run repeatedly.
+The script is idempotent — safe to re-run.
 
 ---
 
 ## Updating
-
-To update the system:
 
 ```bash
 cd /opt/system-maintenance-repo
@@ -83,45 +69,24 @@ sudo git pull
 sudo bash install.sh
 ```
 
-This refreshes:
-
-- systemd units  
-- Webmin module  
-- scripts  
-- journald config (only once)  
-
-User settings are preserved.
+This refreshes the systemd units, script, and Cockpit page. Journald config is only ever applied
+once (skipped if `SystemMaxUse=` is already set) — your own edits there are preserved.
 
 ---
 
-## Webmin Module
+## Cockpit Page
 
-After installation, open:
+After installation, open **Cockpit → Tools → System Maintenance**. You'll see:
 
-**Webmin → System Maintenance**
+- **Last Run** / **Last Exit Code** / **Next Scheduled Run** — read live via `systemctl show`
+- **journald Caps** — read live from `/etc/systemd/journald.conf`
+- **Recent Log Output** — last 200 lines of `/var/log/system-maintenance.log`, colorized
+- **Run Now** — triggers `systemctl start system-maintenance.service` and refreshes everything
+  once it completes
 
-You will see:
-
-### Dashboard
-- Last run  
-- Next scheduled run  
-- Last exit code  
-- Journald caps  
-- Run Now  
-- Run with Live Output  
-- View Detailed Status  
-
-### Manage GitHub Token
-- Update token securely  
-- Token presence indicator  
-- Sanitized input  
-- Secure storage  
-
-### Live Output Runner
-- Spinner animation  
-- Real‑time log streaming  
-- Colorized severity (INFO/WARN/ERROR)  
-- Final summary  
+No build tooling needed for the page itself (`cockpit-page/manifest.json`, `index.html`,
+`style.css`, `index.js` — plain files, no bundler) — `install.sh` just copies them into place, and
+you can redeploy an updated copy the same way (or via Cockpit's own Navigator page, drag-and-drop).
 
 ---
 
@@ -129,22 +94,25 @@ You will see:
 
 ```bash
 sudo systemctl disable --now system-maintenance.timer
+sudo systemctl disable --now system-maintenance-update.timer   # if you'd enabled it
 sudo systemctl disable --now system-maintenance.service
 
 sudo rm -rf /usr/local/system-maintenance
 sudo rm -rf /opt/system-maintenance-repo
-sudo rm -rf /etc/system-maintenance
-sudo rm -rf /usr/share/webmin/system-maintenance
-
-sudo rm -f /etc/webmin/module.infos.cache
-sudo systemctl restart webmin
+sudo rm -rf /usr/share/cockpit/system-maintenance
+sudo rm -f /etc/systemd/system/system-maintenance*.service /etc/systemd/system/system-maintenance*.timer
+sudo systemctl daemon-reload
 ```
+
+(No service restart needed for the Cockpit page — removing its directory is enough; Cockpit just
+won't show the Tools entry on next load.)
 
 ---
 
 ## Notes
 
-- The bootstrap installer is public and contains **no secrets**.  
-- The GitHub token is stored securely and never shown in the UI.  
-- The system is designed to be **fleet‑wide**, **idempotent**, and **drift‑free**.  
-- All Webmin module files are installed under `/usr/share/webmin/system-maintenance`.  
+- Designed to be fleet-wide, idempotent, and drift-free — this repo intentionally has no
+  host-specific content anywhere (script, systemd units, and Cockpit page are all fully generic).
+- Originally built with a Webmin module and a private-repo + GitHub-token install flow; both
+  retired 2026-09-20 once the host fleet moved to Cockpit. See `webmin-module/DEPRECATED.md` for
+  what changed and why, if you're curious about the history.

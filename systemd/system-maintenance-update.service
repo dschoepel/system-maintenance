@@ -3,5 +3,10 @@ Description=Update system-maintenance Git repo
 
 [Service]
 Type=oneshot
-WorkingDirectory=/usr/local/system-maintenance
+# /opt/system-maintenance-repo is the actual git checkout (install.sh's
+# REPO_DIR) -- /usr/local/system-maintenance only ever holds the copied
+# script file, never a git repo, so `git pull` there always failed. Fixed
+# 2026-09-20; caught during a full repo audit, never noticed live since this
+# timer is disabled by default.
+WorkingDirectory=/opt/system-maintenance-repo
 ExecStart=/usr/bin/git pull --rebase

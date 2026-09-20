@@ -6,11 +6,13 @@
 
 LOGFILE="/var/log/system-maintenance.log"
 
-# Ensure log file exists and is readable by Webmin
+# Ensure log file exists and is world-readable (the Cockpit page reads it as
+# the logged-in user, not necessarily root)
 touch "$LOGFILE"
 chmod 644 "$LOGFILE"
 
-# Log everything to both stdout (Webmin Live Output) and the log file
+# Log everything to both stdout (Cockpit's live systemctl-start output) and
+# the log file
 exec > >(tee -a "$LOGFILE") 2>&1
 
 echo "===== System Maintenance Run: $(date '+%Y-%m-%d %H:%M:%S') ====="
@@ -23,9 +25,15 @@ echo ""
 echo "### Updating APT package lists..."
 apt-get update -y -o=Dpkg::Use-Pty=0
 
-echo ""
-echo "### Upgrading installed packages..."
-apt-get upgrade -y -o=Dpkg::Use-Pty=0
+# Deliberately NOT running `apt-get upgrade` here (removed 2026-09-20). This
+# tool's actual job is disk/log housekeeping, not patching -- package
+# upgrades belong to a purpose-built mechanism instead: Cockpit's own
+# Software Updates page (visible, manual, deliberate) or unattended-upgrades
+# (if enabled on a given host; it's specifically designed for safe automated
+# patching -- security-only by default, reboot-aware -- unlike a bare
+# `apt-get upgrade -y` in a cron script). `apt-get update` above is kept: it
+# only refreshes the package index (read-only, no installed-package changes)
+# and autoremove below needs current metadata to compute what's safe to drop.
 
 echo ""
 echo "### Autoremove unused packages..."
